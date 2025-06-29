@@ -1,0 +1,7 @@
+# This file is a placeholder to easily audit importance weight for files.
+# If not specfied, by default all files are considered equally important.
+# The Maintainer reserves the right to attribute importance to files
+# in this file, and to change the importance of files at any time.
+# Note: It is possible for the same file to share contributors with different importance weights.
+# The format is:
+# <contributer name>, <file name + path>, <importance weight>

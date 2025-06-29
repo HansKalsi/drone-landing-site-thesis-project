@@ -1,0 +1,2 @@
+# Copyright © 2025 Hans Nicholas Kalsi
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 OR LicenseRef-Commercial
