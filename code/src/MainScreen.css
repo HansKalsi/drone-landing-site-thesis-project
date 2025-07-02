@@ -1,0 +1,35 @@
+.image-box {
+    background-color: orange;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 70vw;
+    height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.right-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: blue;
+    width: 30vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.bottom-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background-color: green;
+    width: 70vw;
+    height: 20vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
