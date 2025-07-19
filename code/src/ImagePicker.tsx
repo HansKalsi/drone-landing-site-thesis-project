@@ -1,50 +1,13 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GridOverlay from "./GridOverlay";
-
-/** convert an HTTPS image to base-64 entirely in the browser */
-export async function httpsToBase64(url: string): Promise<{ mime: string; b64: string }> {
-  const res = await fetch(url, { mode: "cors" });
-  if (!res.ok) throw new Error(`${url} → ${res.status}`);
-
-  const blob = await res.blob();                // binary
-  const mime = blob.type || "image/jpeg";
-
-  const b64 = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () =>
-      resolve((reader.result as string).split(",")[1]); // remove data: prefix
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-
-  return { mime, b64 };        // plain base-64, no Buffer needed
-}
-
-async function fileToBase64(file: File): Promise<{ mime: string; b64: string }> {
-  const mime = file.type || "image/jpeg";
-
-  const b64 = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () =>
-      resolve((reader.result as string).split(",")[1]); // strip data: prefix
-    reader.onerror = reject;
-    reader.readAsDataURL(file);                         // <-- File, not Blob
-  });
-
-  return { mime, b64 };
-}
-
-// --- helper ---------------------------------------------------------------
-function dataURLtoBase64(dataURL: string) {
-  return dataURL.split(",")[1]; // removes "data:image/png;base64,"
-}
 
 /* ---------- minimal React demo ---------- */
 export default function ImagePicker(props: {
   setB64ForAI: (b64: string) => void;
+  soleCellToKeep?: string;
 }) {
   const [imgURL, setImgURL] = useState<string | null>(null);
-  const overlayRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(document.createElement("canvas"));
 
   /* 1. user picks file → object URL */
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -56,6 +19,11 @@ export default function ImagePicker(props: {
 
     // tidy up old URL to avoid memory leaks
     return () => URL.revokeObjectURL(objectURL);
+  }
+
+  // convert data URL to base-64 string
+  function dataURLtoBase64(dataURL: string) {
+    return dataURL.split(",")[1]; // removes "data:image/png;base64,"
   }
 
   /* 2. grab composite PNG from the GridOverlay’s internal off-screen merge */
@@ -71,6 +39,7 @@ export default function ImagePicker(props: {
     off.height = baseImage.naturalHeight;
     const ctx = off.getContext("2d")!;
     ctx.drawImage(baseImage, 0, 0);
+    console.log("overlayRef", overlayRef.current);
     ctx.drawImage(overlayRef.current, 0, 0);
 
     let qualityReduction = 0.8 // start with 80% quality
@@ -92,6 +61,13 @@ export default function ImagePicker(props: {
     // ───────────── upload b64 to your VLM endpoint here ─────────────
   }
 
+  useEffect(() => {
+    if (props.soleCellToKeep) {
+      console.log("Sole cell to keep triggered:", props.soleCellToKeep);
+      handleSend(); // auto-update if a cell is specified
+    }
+  }, [props.soleCellToKeep]);
+
   return (
     <main style={{ fontFamily: "sans-serif", padding: 24, maxWidth: 960 }}>
       <h1>Landing-Zone Grid Demo</h1>
@@ -108,6 +84,7 @@ export default function ImagePicker(props: {
             cols={10}
             // expose the overlay canvas so App can composite later
             refOverlay={overlayRef}
+            onlyKeepCell={props.soleCellToKeep ? props.soleCellToKeep : undefined}
           />
 
           <button style={{ marginTop: 16 }} onClick={handleSend}>

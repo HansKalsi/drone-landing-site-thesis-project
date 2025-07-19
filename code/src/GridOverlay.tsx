@@ -1,17 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 
-/**
- * GridOverlay Component (vanilla‑style React + TypeScript)
- * -------------------------------------------------------
- * ‣ Draws an A‑row / B‑column grid with alphanumeric labels on top of the image.
- * ‣ Shows RAW frame (left) and grid‑overlay frame (right).
- * ‣ No Tailwind / shadcn — only basic inline styles + semantic HTML.
- *
- * Usage example:
- * ```tsx
- * <GridOverlay imageSrc={"/frame.jpg"} rows={10} cols={10} />
- * ```
- */
 export interface GridOverlayProps {
   imageSrc: string;
   rows?: number;      // default 10 → A‑J
@@ -21,7 +9,8 @@ export interface GridOverlayProps {
   labelColor?: string;
   outlineColor?: string;
   className?: string; // optional wrapper class
-  refOverlay?: React.RefObject<HTMLCanvasElement | null>;
+  refOverlay?: React.RefObject<HTMLCanvasElement>;
+  onlyKeepCell?: string;
 }
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -35,18 +24,11 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
   labelColor = "#ffffff",
   outlineColor = "#000000",
   className = "",
-  refOverlay = null,
+  refOverlay,
+  onlyKeepCell,
 }) => {
   const imgRef = useRef<HTMLImageElement>(null);
-  const overlayRef = useRef<HTMLCanvasElement>(null);
   const [loaded, setLoaded] = useState(false);
-
-  /* ──────────────── helper to synchronise refs ──────────────── */
-  const mergeOverlayRefs = (el: HTMLCanvasElement | null) => {
-    overlayRef.current = el;
-    if (refOverlay && typeof refOverlay === "object")
-      (refOverlay as React.RefObject<HTMLCanvasElement | null>).current = el;
-  };
 
   /**
    * Draw the grid and labels once the image is fully loaded.
@@ -54,7 +36,7 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
   useEffect(() => {
     if (!loaded) return;
     const img = imgRef.current;
-    const canvas = overlayRef.current;
+    const canvas = refOverlay!.current;
     if (!img || !canvas) return;
 
     canvas.width = img.naturalWidth;
@@ -113,12 +95,35 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
         drawLabel(label, x, y);
       }
     }
-  }, [loaded, rows, cols, lineColor, lineWidth, labelColor, outlineColor]);
+
+    if (onlyKeepCell) {
+        blockOutImageExceptOneCell(onlyKeepCell);
+    }
+  }, [loaded, rows, cols, lineColor, lineWidth, labelColor, outlineColor, onlyKeepCell]);
+
+  function blockOutImageExceptOneCell(cellToKeep: string) {
+    const canvas = refOverlay!.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // clear previous drawings
+    // Fill all cells with a solid colour except a particular grid cell
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const label = `${ALPHABET[r]}${c + 1}`;
+        if (label === cellToKeep) continue; // skip the cell to keep
+        const x = c * (canvas.width / cols);
+        const y = r * (canvas.height / rows);
+        ctx.fillStyle = "rgba(0, 0, 0, 1)"; // semi-transparent black
+        ctx.fillRect(x, y, canvas.width / cols, canvas.height / rows);
+      }
+    }
+  }
 
     /* ──────────────────────── DOWNLOAD COMPOSITE PNG ─────────────────────── */
     const downloadComposite = () => {
         const img = imgRef.current;
-        const overlay = overlayRef.current;
+        const overlay = refOverlay!.current;
         console.log(img, overlay);
         if (!img || !overlay) return;
     
@@ -170,7 +175,7 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
             style={{ maxWidth: "100%", height: "auto" }}
           />
           <canvas
-            ref={mergeOverlayRefs}
+            ref={refOverlay}
             style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}
           />
         </div>

@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import './MainScreen.css'
 import { askLLM } from './lib/llm';
-import ImagePicker from './test';
+import ImagePicker from './ImagePicker';
 
 export const MainScreen: React.FC = () => {
     const [imageB64ForAI, setImageB64ForAI] = useState<string | null>(null);
-
+    const [actuallySendToAI, setActuallySendToAI] = useState<boolean>(true);
     const awaitingAiResponse = useRef(false);
+    const [keepParticularCell, setKeepParticularCell] = useState<string | null>(null);
+    const [recheckText, setRecheckText] = useState<string>("");
+    const [aiCallQueue, setAiCallQueue] = useState<any[]>([]);
 
-    // "unsafe_grids": ["<ID>", ...],
     const systemText = `
         You are an onboard drone AI landing assistant.
         Identify the safest landing spots for a drone, avoiding obstacles like trees, rocks, water, and other hazardous areas for a drone to safely land.
@@ -33,52 +35,86 @@ export const MainScreen: React.FC = () => {
         - If no grid squares are detected, return {"unknown": 'no grid detected'}.
         - Each quadrant borders are defined in white, the label is placed in the center, consider the whole square when making your decision.
     `;
-    // const systemText = `
-    //     You are an onboard drone AI landing assistant.
-    //     Make sure you consider the image as a whole, and each grid quadrant - including how the quadrants may blend together to provide a bigger picture of the terrain.
-    //     Your goal is to find the safest landing spots for a drone in the provided image.
-    //     Keep in mind that this image is an aerial top down view, so the perspective is from above.
-    //     Pay close attention to dark spots, as this would indicate shadows from obstacles and would not be a safe landing spot.
-    //     Analyze the image and identify areas that are safe for landing, avoiding obstacles like trees, rocks, water, and other hazardous areas.
-    // `;
+
+    async function callAiModel(text: string = systemText, callHandleResponse: boolean = true) {
+        const report = await askLLM(
+            text,
+            "",
+            imageB64ForAI || ""
+        ).then((response) => {    
+            awaitingAiResponse.current = false;
+            handleResponse(response, callHandleResponse);
+        });
+    }
+
+    function handleResponse(response: string, callHandleResponse: boolean) {
+        console.log("AI Response:", response);
+        // Remove ```json and ``` from response
+        const cleanedResponse = response.replace(/```json|```/g, '').trim();
+        console.log("Cleaned Response:", cleanedResponse);
+        const parsedResponse = JSON.parse(cleanedResponse);
+        console.log("Parsed Response:", parsedResponse);
+        if (callHandleResponse) {
+            // Re-input the response to the ai to see if it agrees with itself
+            console.log(parsedResponse.safe_top3);
+            setAiCallQueue(parsedResponse.safe_top3);
+        }
+    }
 
     useEffect(() => {
+        console.log("Image B64 for AI:", imageB64ForAI);
+        if (!actuallySendToAI) return; // Don't call AI if not set to do so
+        console.log("actually send passed");
         if (!imageB64ForAI) return; // No image to process
+        console.log("image exists");
         if (!awaitingAiResponse.current) {
+            console.log("not waiting for ai response, hence calling AI model");
             awaitingAiResponse.current = true;
-            (async () => {
-                const report = await askLLM(
-                    systemText,
-                    "",
-                    imageB64ForAI || ""
-                ).then((response) => {    
-                    awaitingAiResponse.current = false;
-                    console.log(response);
-                });
-            })();
+            if (recheckText) {
+                callAiModel(recheckText, false).then(() => {
+                    // Retrigger ai queue so next item can be processed
+                    setAiCallQueue([...aiCallQueue]); // Update the state to trigger re-render
+                }); // Call AI with recheck text if it exists       
+            } else {
+                callAiModel();
+            }
+        } else {
+            console.warn("Already awaiting AI response, skipping this call.");
         }
     }, [imageB64ForAI]);
 
-    const imageSrc = "https://thumbs.dreamstime.com/b/aerial-top-down-view-to-forest-trees-tourist-paths-slovakia-national-park-mala-fatra-vibrant-colors-fresh-nature-beautiful-153796506.jpg"
-    const [blobURL, setBlobURL] = useState<string | null>(null);
-
     useEffect(() => {
-        async function loadImage() {
-          const res = await fetch(imageSrc, { mode: "cors" });
-          const blob = await res.blob();
-          const objectURL = URL.createObjectURL(blob);
-          setBlobURL(objectURL); // state you pass to <img src=...>
+        console.log("AI Call Queue:", aiCallQueue);
+        console.log("AI Call Queue Length", aiCallQueue.length);
+        if (aiCallQueue.length > 0) {
+            const aiCall = aiCallQueue.pop(); // Remove the first item from the queue
+            console.log(`ID: ${aiCall.id}, Rationale: ${aiCall.rationale}`);
+            const recheckText = `This is what we have been told based on the provided image. Grid ID: ${aiCall.id}, Rationale: ${aiCall.rationale}; Do you agree with this assessment or do you have a different opinion? Keep your response to maximum 100 words.
+            This would be unsuitable anything resembling a human, clothing, or otherwise could be indangered. Please response in the format: { "id": "${aiCall.id}", "valid_landing_site": <true/false>, "reason": "<50 words maximum>" }
+            - The image has been masked so that you only see the grid id cell provided, please ultra analyse it.
+            - Bare in mind that anything that looks like an object in the image may be a hazard to the drone itself, and therefore that would make that landing site unsuitable.
+            - If you are unsure, always say false, and provide a reason why you are unsure.
+            - Pay close attention as to whether there are many colours in the cell grid provided, this indicates obstacles, regardless of it being obvious or not.
+            // - If there is a monotone colour, this should indicate a safe landing site, but you must still provide a reason why.`;
+            // const recheckText = `This is what we have been told based on the provided image. Grid ID: ${aiCall.id}, Rationale: ${aiCall.rationale}; Do you agree with this assessment or do you have a different opinion?
+            // Anything resembling a human, clothing, or otherwise that could be indangered - would render this landing spot unsuitable and unsafe. Please respond in the format: { "id": "${aiCall.id}", "valid_landing_site": <true/false>, "reason": "<50 words maximum>" }
+            // - The image has been masked so you can focus only on the grid id cell provided, please ultra analyse it.
+            // - Bare in mind that anything that looks like an object in the image may be a hazard to the drone itself, and therefore that would make that landing site unsuitable.
+            // - If you are unsure, always say false, and provide a reason why you are unsure.
+            // - Pay close attention to the amount of colours in the cell grid provided, a high amount of strong variation could indicate obstacles, regardless of it being obvious or not.
+            // - If there is a monotone colour, this should indicate a safe landing site, but you must still provide a reason why.`;
+            setRecheckText(recheckText);
+            setActuallySendToAI(true); // Set to true to allow AI calls again
+            setKeepParticularCell(aiCall.id)
         }
-        loadImage();
-      }, [imageSrc]);
-      
+    }, [aiCallQueue]);
 
     return (
         <div>
-            <ImagePicker setB64ForAI={setImageB64ForAI} />
-            {/* {blobURL && (
-                <GridOverlay imageSrc={blobURL} rows={26} cols={52} />
-            )} */}
+            <ImagePicker
+                setB64ForAI={setImageB64ForAI}
+                soleCellToKeep={keepParticularCell ? keepParticularCell : undefined}
+            />
             {/* <div className="image-box">IMAGE BOX</div>
             <div className="right-panel">RIGHT PANEL</div>
             <div className="bottom-panel">BOTTOM PANEL</div> */}
