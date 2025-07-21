@@ -11,6 +11,7 @@ export interface GridOverlayProps {
   className?: string; // optional wrapper class
   refOverlay?: React.RefObject<HTMLCanvasElement>;
   onlyKeepCell?: string;
+  cellsToExclude?: string[]; // cells to exclude from the grid overlay
 }
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -26,6 +27,7 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
   className = "",
   refOverlay,
   onlyKeepCell,
+  cellsToExclude = [],
 }) => {
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
@@ -99,7 +101,14 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
     if (onlyKeepCell) {
         blockOutImageExceptOneCell(onlyKeepCell);
     }
-  }, [loaded, rows, cols, lineColor, lineWidth, labelColor, outlineColor, onlyKeepCell]);
+
+    if (cellsToExclude && cellsToExclude.length > 0) {
+      console.log("Excluding cells from overlay:", cellsToExclude);
+      cellsToExclude.forEach(cell => {
+        blockOutOneCellInImage(cell);
+      });
+    }
+  }, [loaded, rows, cols, lineColor, lineWidth, labelColor, outlineColor, onlyKeepCell, cellsToExclude]);
 
   function blockOutImageExceptOneCell(cellToKeep: string) {
     const canvas = refOverlay!.current;
@@ -120,28 +129,50 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
     }
   }
 
-    /* ──────────────────────── DOWNLOAD COMPOSITE PNG ─────────────────────── */
-    const downloadComposite = () => {
-        const img = imgRef.current;
-        const overlay = refOverlay!.current;
-        console.log(img, overlay);
-        if (!img || !overlay) return;
-    
-        // Off‑screen canvas to merge image + overlay
-        const off = document.createElement("canvas");
-        off.width = img.naturalWidth;
-        off.height = img.naturalHeight;
-        const ctx = off.getContext("2d");
-        if (!ctx) return;
-    
-        ctx.drawImage(img, 0, 0, off.width, off.height);      // base image
-        ctx.drawImage(overlay, 0, 0, off.width, off.height);  // grid & labels
-    
-        const link = document.createElement("a");
-        link.download = "frame_with_grid.png";
-        link.href = off.toDataURL("image/png");
-        link.click();
-    };
+  // Blocks out a particular cell in the image overlay
+  function blockOutOneCellInImage(cellToBlock: string) {
+    const canvas = refOverlay!.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Update canvas to block out the specified cell
+    const cellIndex = ALPHABET.indexOf(cellToBlock[0]);
+    const colIndex = parseInt(cellToBlock.slice(1)) - 1; // convert to 0-based index
+    if (cellIndex < 0 || colIndex < 0 || cellIndex >= rows || colIndex >= cols) {
+      console.warn(`Invalid cell identifier: ${cellToBlock}`);
+      return;
+    }
+    const cellW = canvas.width / cols;
+    const cellH = canvas.height / rows;
+    const x = colIndex * cellW;
+    const y = cellIndex * cellH;
+    ctx.fillStyle = "rgba(0, 0, 0, 1)"; // solid black to block out
+    ctx.fillRect(x, y, cellW, cellH);
+  }
+
+  /* ──────────────────────── DOWNLOAD COMPOSITE PNG ─────────────────────── */
+  const downloadComposite = () => {
+      const img = imgRef.current;
+      const overlay = refOverlay!.current;
+      console.log(img, overlay);
+      if (!img || !overlay) return;
+  
+      // Off‑screen canvas to merge image + overlay
+      const off = document.createElement("canvas");
+      off.width = img.naturalWidth;
+      off.height = img.naturalHeight;
+      const ctx = off.getContext("2d");
+      if (!ctx) return;
+  
+      ctx.drawImage(img, 0, 0, off.width, off.height);      // base image
+      ctx.drawImage(overlay, 0, 0, off.width, off.height);  // grid & labels
+  
+      const link = document.createElement("a");
+      link.download = "frame_with_grid.png";
+      link.href = off.toDataURL("image/png");
+      link.click();
+  };
 
   // ---------------- Render ----------------
   return (

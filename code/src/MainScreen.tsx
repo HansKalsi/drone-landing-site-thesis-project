@@ -10,6 +10,9 @@ export const MainScreen: React.FC = () => {
     const [keepParticularCell, setKeepParticularCell] = useState<string | null>(null);
     const [recheckText, setRecheckText] = useState<string>("");
     const [aiCallQueue, setAiCallQueue] = useState<any[]>([]);
+    const [aiSafeTopThree, setAiSafeTopThree] = useState<any[]>([]);
+    const [cellsToExclude, setCellsToExclude] = useState<string[]>([]);
+    const timerStartedRef = useRef<boolean>(false);
 
     const systemText = `
         You are an onboard drone AI landing assistant.
@@ -54,10 +57,51 @@ export const MainScreen: React.FC = () => {
         console.log("Cleaned Response:", cleanedResponse);
         const parsedResponse = JSON.parse(cleanedResponse);
         console.log("Parsed Response:", parsedResponse);
+        if (parsedResponse.safe_top3 === undefined) {
+            // If true, we know this response is handling an individual cell recheck
+            console.log("Valid landing site?", parsedResponse.valid_landing_site);
+            if (parsedResponse.valid_landing_site) {
+                console.log("Adding to AI Safe Top Three:", parsedResponse);
+                if (aiSafeTopThree.some(item => item.id === parsedResponse.id)) {
+                    console.warn("Cell already exists in AI Safe Top Three, skipping addition:", parsedResponse.id);
+                    return false; // Don't add if already exists
+                }
+                // Add to AI Safe Top Three if it doesn't already exist
+                setAiSafeTopThree(prev => [...prev, parsedResponse]);
+            } else {
+                // Not a valid landing site, so for any future re-runs we want to exclude this cell from the image
+                console.log("Excluding cell from future checks:", parsedResponse.id);
+                setCellsToExclude(prev => [...prev, parsedResponse.id]);
+            }
+        }
         if (callHandleResponse) {
             // Re-input the response to the ai to see if it agrees with itself
             console.log(parsedResponse.safe_top3);
             setAiCallQueue(parsedResponse.safe_top3);
+        }
+    }
+
+    function triggerAiCall() {
+        console.log("AI available to call");
+        console.timeLog("AI Execution Time", "AI Call triggered");
+        if (aiSafeTopThree.length === 3) {
+            console.warn("AI Safe Top Three already has 3 items, no further calls needed.");
+            console.log("Current AI Safe Top Three:", aiSafeTopThree);
+            return; // Don't call AI if we already have 3 safe landing sites
+        }
+        awaitingAiResponse.current = true;
+        if (recheckText) {
+            callAiModel(recheckText, false).then(() => {
+                // Retrigger ai queue so next item can be processed
+                setAiCallQueue([...aiCallQueue]); // Update the state to trigger re-render
+                if (aiCallQueue.length === 0) {
+                    console.warn("AI Call Queue is empty, no further calls to make.");
+                    setKeepParticularCell(null); // Reset the cell to keep
+                    setRecheckText(""); // Reset the recheck text
+                }
+            }); // Call AI with recheck text if it exists       
+        } else {
+            callAiModel();
         }
     }
 
@@ -68,16 +112,11 @@ export const MainScreen: React.FC = () => {
         if (!imageB64ForAI) return; // No image to process
         console.log("image exists");
         if (!awaitingAiResponse.current) {
-            console.log("not waiting for ai response, hence calling AI model");
-            awaitingAiResponse.current = true;
-            if (recheckText) {
-                callAiModel(recheckText, false).then(() => {
-                    // Retrigger ai queue so next item can be processed
-                    setAiCallQueue([...aiCallQueue]); // Update the state to trigger re-render
-                }); // Call AI with recheck text if it exists       
-            } else {
-                callAiModel();
+            if (timerStartedRef.current === false) {
+                console.time('AI Execution Time');
+                timerStartedRef.current = true;
             }
+            triggerAiCall();
         } else {
             console.warn("Already awaiting AI response, skipping this call.");
         }
@@ -90,7 +129,7 @@ export const MainScreen: React.FC = () => {
             const aiCall = aiCallQueue.pop(); // Remove the first item from the queue
             console.log(`ID: ${aiCall.id}, Rationale: ${aiCall.rationale}`);
             const recheckText = `This is what we have been told based on the provided image. Grid ID: ${aiCall.id}, Rationale: ${aiCall.rationale}; Do you agree with this assessment or do you have a different opinion? Keep your response to maximum 100 words.
-            This would be unsuitable anything resembling a human, clothing, or otherwise could be indangered. Please response in the format: { "id": "${aiCall.id}", "valid_landing_site": <true/false>, "reason": "<50 words maximum>" }
+            This would be unsuitable anything resembling a human, clothing, or otherwise could be indangered. Please response in the format: { "id": "${aiCall.id}", "valid_landing_site": <true/false>, "rationale": "<50 words maximum>" }
             - The image has been masked so that you only see the grid id cell provided, please ultra analyse it.
             - Bare in mind that anything that looks like an object in the image may be a hazard to the drone itself, and therefore that would make that landing site unsuitable.
             - If you are unsure, always say false, and provide a reason why you are unsure.
@@ -109,11 +148,61 @@ export const MainScreen: React.FC = () => {
         }
     }, [aiCallQueue]);
 
+    function timeoutCallbackToTriggerAI() {
+        setTimeout(() => {
+            console.log("Timeout callback triggered, checking if AI is busy:", awaitingAiResponse.current);
+            if (awaitingAiResponse.current === false) {
+                if (aiSafeTopThree.length < 3) {
+                    console.log("AI Safe Top Three is less than 3, triggering AI call.", aiSafeTopThree.length, aiSafeTopThree);
+                    triggerAiCall();
+                } else {
+                    console.log("AI Safe Top Three is complete, no further AI calls needed.", aiSafeTopThree.length, aiSafeTopThree);
+                }
+            } else {
+                timeoutCallbackToTriggerAI(); // Re-trigger the timeout if still awaiting response
+            }
+        }, 1000);
+    }
+
+    useEffect(() => {
+        if (aiSafeTopThree.length > 0) {
+            console.log("AI Safe Top Three currently:", aiSafeTopThree);
+            if (aiSafeTopThree.length < 3 && cellsToExclude.length < 30) {
+                // Add valid cells to exlude them from future AI calls
+                aiSafeTopThree.forEach(cell => {
+                    if (!cellsToExclude.includes(cell.id)) {
+                        console.log("EXCLUDING VALID CELL FROM FUTURE PASSES:", cell.id);
+                        setCellsToExclude(prev => [...prev, cell.id]);
+                    }
+                });
+                // Give up after 30 cells are exluded, otherwise keep trying to find another valid landing site
+                console.log("AI Safe Top Three is less than 3, triggering timeout callback to re-trigger AI call");
+                timeoutCallbackToTriggerAI();
+            } else {
+                console.log("AI Safe Top Three is complete or too many cells excluded, stopping AI calls.");
+                console.log("Final AI Safe Top Three:", aiSafeTopThree);
+                if (timerStartedRef.current === true) {
+                    console.error("STOPPING CLOCK");
+                    console.timeEnd('AI Execution Time');
+                    timerStartedRef.current = false; // Reset timer started flag
+                }
+            }
+        } else {
+            console.log("No top three identified currently");
+            if (timerStartedRef.current === true) {
+                console.error("STOPPING CLOCK");
+                console.timeEnd('AI Execution Time');
+                timerStartedRef.current = false; // Reset timer started flag
+            }
+        }
+    }, [aiSafeTopThree]);
+
     return (
         <div>
             <ImagePicker
                 setB64ForAI={setImageB64ForAI}
                 soleCellToKeep={keepParticularCell ? keepParticularCell : undefined}
+                cellsToExclude={cellsToExclude}
             />
             {/* <div className="image-box">IMAGE BOX</div>
             <div className="right-panel">RIGHT PANEL</div>

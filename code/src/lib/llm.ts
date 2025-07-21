@@ -1,5 +1,3 @@
-// import { httpsToBase64 } from '../test';
-
 export async function askLLM(systemText: string, userText: string, imageB64: string = "") {
   let imageURI: string = "";
   if (imageB64) {

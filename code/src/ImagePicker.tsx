@@ -5,6 +5,7 @@ import GridOverlay from "./GridOverlay";
 export default function ImagePicker(props: {
   setB64ForAI: (b64: string) => void;
   soleCellToKeep?: string;
+  cellsToExclude?: string[];
 }) {
   const [imgURL, setImgURL] = useState<string | null>(null);
   const overlayRef = useRef<HTMLCanvasElement>(document.createElement("canvas"));
@@ -66,7 +67,11 @@ export default function ImagePicker(props: {
       console.log("Sole cell to keep triggered:", props.soleCellToKeep);
       handleSend(); // auto-update if a cell is specified
     }
-  }, [props.soleCellToKeep]);
+    if (props.cellsToExclude && props.cellsToExclude.length > 0) {
+      console.log("Cells to exclude triggered:", props.cellsToExclude);
+      handleSend(); // auto-update if cells to exclude are specified
+    }
+  }, [props.soleCellToKeep, props.cellsToExclude]);
 
   return (
     <main style={{ fontFamily: "sans-serif", padding: 24, maxWidth: 960 }}>
@@ -85,6 +90,7 @@ export default function ImagePicker(props: {
             // expose the overlay canvas so App can composite later
             refOverlay={overlayRef}
             onlyKeepCell={props.soleCellToKeep ? props.soleCellToKeep : undefined}
+            cellsToExclude={props.cellsToExclude ? props.cellsToExclude : []}
           />
 
           <button style={{ marginTop: 16 }} onClick={handleSend}>
