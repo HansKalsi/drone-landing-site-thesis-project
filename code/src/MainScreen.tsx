@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import './MainScreen.css'
 import { askLLM } from './lib/llm';
 import ImagePicker from './ImagePicker';
+import { saveScenario } from './DownloadAiData';
 
 export const MainScreen: React.FC = () => {
     const [imageB64ForAI, setImageB64ForAI] = useState<string | null>(null);
@@ -164,6 +165,15 @@ export const MainScreen: React.FC = () => {
         }, 1000);
     }
 
+    function downloadRunData() {
+        const dataUrl   = imageB64ForAI as string;     // "data:image/png;base64,iVBORw0..."
+        const frameId   = 'TEST_SCENARIO';
+        const top3      = aiSafeTopThree;
+        const extras    = { model: 'qwen/qwen2.5-vl-7b', placeholder: "other data" };
+
+        saveScenario(dataUrl, frameId, top3, extras);
+    }
+
     useEffect(() => {
         if (aiSafeTopThree.length > 0) {
             console.log("AI Safe Top Three currently:", aiSafeTopThree);
@@ -186,6 +196,8 @@ export const MainScreen: React.FC = () => {
                     console.timeEnd('AI Execution Time');
                     timerStartedRef.current = false; // Reset timer started flag
                 }
+                // Download the scenario data and metadata
+                downloadRunData();
             }
         } else {
             console.log("No top three identified currently");
