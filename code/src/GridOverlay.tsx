@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { imageB64ForAIContext } from "./MainScreen";
 
 export interface GridOverlayProps {
   imageSrc: string;
@@ -31,6 +32,7 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
 }) => {
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const { originalImageGridOverlay, setOriginalImageGridOverlay } = useContext(imageB64ForAIContext);
 
   /**
    * Draw the grid and labels once the image is fully loaded.
@@ -107,6 +109,27 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
       cellsToExclude.forEach(cell => {
         blockOutOneCellInImage(cell);
       });
+    }
+
+    const off = document.createElement("canvas");
+    off.width  = imgRef.current?.naturalWidth || 0;
+    off.height = imgRef.current?.naturalHeight || 0;
+    const gridOverlayedCtx = off.getContext("2d")!;
+    if (imgRef.current === null) {
+      console.error("Image not loaded yet -- skipping grid overlay recording.");
+      return;
+    }
+    if (!refOverlay || refOverlay?.current === null) {
+      console.error("Overlay canvas not available -- skipping grid overlay recording.");
+      return;
+    }
+    gridOverlayedCtx.drawImage(imgRef.current, 0, 0);
+    gridOverlayedCtx.drawImage(refOverlay.current, 0, 0);
+    const b64 = off.toDataURL("image/png").split(",")[1];
+    if (originalImageGridOverlay === null && b64) {
+      setOriginalImageGridOverlay(b64); // store original image for later download
+    } else {
+      console.warn("Original image grid overlay already set, skipping update.");
     }
   }, [loaded, rows, cols, lineColor, lineWidth, labelColor, outlineColor, onlyKeepCell, cellsToExclude]);
 

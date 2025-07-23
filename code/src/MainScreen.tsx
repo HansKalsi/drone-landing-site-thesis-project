@@ -1,11 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import './MainScreen.css'
 import { askLLM } from './lib/llm';
 import ImagePicker from './ImagePicker';
 import { saveScenario } from './DownloadAiData';
 
+export const imageB64ForAIContext = createContext<{
+    imageB64ForAI: string | null;
+    setImageB64ForAI: React.Dispatch<React.SetStateAction<string | null>>;
+    originalImageGridOverlay: string | null;
+    setOriginalImageGridOverlay: React.Dispatch<React.SetStateAction<string | null>>;
+}>({
+    imageB64ForAI: null,
+    setImageB64ForAI: () => {},
+    originalImageGridOverlay: null,
+    setOriginalImageGridOverlay: () => {},
+});
+
 export const MainScreen: React.FC = () => {
     const [imageB64ForAI, setImageB64ForAI] = useState<string | null>(null);
+    const [originalImageGridOverlay, setOriginalImageGridOverlay] = useState<string | null>(null);
     const [actuallySendToAI, setActuallySendToAI] = useState<boolean>(true);
     const awaitingAiResponse = useRef(false);
     const [keepParticularCell, setKeepParticularCell] = useState<string | null>(null);
@@ -166,13 +179,17 @@ export const MainScreen: React.FC = () => {
     }
 
     function downloadRunData() {
-        const dataUrl   = imageB64ForAI as string;     // "data:image/png;base64,iVBORw0..."
+        const dataUrl   = originalImageGridOverlay as string;     // "data:image/png;base64,iVBORw0..."
         const frameId   = 'TEST_SCENARIO';
         const top3      = aiSafeTopThree;
         const extras    = { model: 'qwen/qwen2.5-vl-7b', placeholder: "other data" };
 
         saveScenario(dataUrl, frameId, top3, extras);
     }
+
+    useEffect(() => {
+        console.warn("Original Image Grid Overlay Updated:", originalImageGridOverlay);
+    }, [originalImageGridOverlay]);
 
     useEffect(() => {
         if (aiSafeTopThree.length > 0) {
@@ -210,15 +227,16 @@ export const MainScreen: React.FC = () => {
     }, [aiSafeTopThree]);
 
     return (
-        <div>
-            <ImagePicker
-                setB64ForAI={setImageB64ForAI}
-                soleCellToKeep={keepParticularCell ? keepParticularCell : undefined}
-                cellsToExclude={cellsToExclude}
-            />
-            {/* <div className="image-box">IMAGE BOX</div>
-            <div className="right-panel">RIGHT PANEL</div>
-            <div className="bottom-panel">BOTTOM PANEL</div> */}
-        </div>
+        <imageB64ForAIContext.Provider value={{ imageB64ForAI, setImageB64ForAI, originalImageGridOverlay, setOriginalImageGridOverlay }}>
+            <div>
+                <ImagePicker
+                    soleCellToKeep={keepParticularCell ? keepParticularCell : undefined}
+                    cellsToExclude={cellsToExclude}
+                />
+                {/* <div className="image-box">IMAGE BOX</div>
+                <div className="right-panel">RIGHT PANEL</div>
+                <div className="bottom-panel">BOTTOM PANEL</div> */}
+            </div>
+        </imageB64ForAIContext.Provider>
     );
 }

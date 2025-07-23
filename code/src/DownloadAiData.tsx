@@ -7,7 +7,7 @@
  * @param {Array<Object>} top3Cells  [{row, col, score}, …]
  * @param {Object}        extras     optional extra fields for the JSON
  */
-export async function saveScenario(dataUrl: string, frameId: string, top3Cells: Array<Object>, extras = {}) {
+export async function saveScenario(dataUrl: string, frameId: string, top3Cells: Array<Object>, extras: Object = {}) {
     /* ---- data-URL → Blob ---- */
     const imgBlob = await (await fetch("data:image/png;base64," + dataUrl)).blob();   // universal + simplest
     // (Browsers ≥ Chromium 85 / FF 76 support fetch(dataUrl))

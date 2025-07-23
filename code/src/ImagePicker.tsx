@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import GridOverlay from "./GridOverlay";
+import { imageB64ForAIContext } from "./MainScreen";
 
 /* ---------- minimal React demo ---------- */
 export default function ImagePicker(props: {
-  setB64ForAI: (b64: string) => void;
   soleCellToKeep?: string;
   cellsToExclude?: string[];
 }) {
   const [imgURL, setImgURL] = useState<string | null>(null);
   const overlayRef = useRef<HTMLCanvasElement>(document.createElement("canvas"));
+  const { setImageB64ForAI } = useContext(imageB64ForAIContext);
 
   /* 1. user picks file → object URL */
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -58,8 +59,7 @@ export default function ImagePicker(props: {
 
     const b64 = dataURLtoBase64(dataURL);
     console.log("Ready for Vision model:", b64.slice(0, 40) + "…");
-    props.setB64ForAI(b64); // pass to parent
-    // ───────────── upload b64 to your VLM endpoint here ─────────────
+    setImageB64ForAI(b64); // update b64 image in React context
   }
 
   useEffect(() => {
