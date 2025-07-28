@@ -53,8 +53,9 @@ export default function ImagePicker(props: {
     while (dataURL.length > 100000 && qualityReduction > 0.1) {
       qualityReduction -= 0.1; // reduce quality by 10% each iteration
       dataURL = off.toDataURL("image/jpeg", qualityReduction);
+      console.warn("Image size reduced to:", dataURL.length, " with quality:", qualityReduction);
     }
-    if (qualityReduction <= 0.1) {
+    if (dataURL.length > 100000 && qualityReduction <= 0.1) {
       console.warn("Max image reduction size reached:", dataURL.length);
       console.warn("Image could not be reduced to under 1MB, consider using a smaller image.");
       return; // stop code
