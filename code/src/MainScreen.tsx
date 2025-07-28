@@ -27,6 +27,10 @@ export const MainScreen: React.FC = () => {
     const [aiSafeTopThree, setAiSafeTopThree] = useState<any[]>([]);
     const [cellsToExclude, setCellsToExclude] = useState<string[]>([]);
     const timerStartedRef = useRef<boolean>(false);
+    const [renderTopThree, setRenderTopThree] = useState<boolean>(false);
+    const startPerformanceTime = useRef<number>(0);
+    const endPerformanceTime = useRef<number>(0);
+    const callbackProcessing = useRef<boolean>(false);
 
     const systemText = `
         You are an onboard drone AI landing assistant.
@@ -42,7 +46,7 @@ export const MainScreen: React.FC = () => {
         Format:
         {
         "safe_top3": [
-            { "id": "<ID>", "rationale": "<50 words maximum>" },
+            { "id": "<Letter(A-J)&Number(1-10)>", "rationale": "<50 words maximum>" },
             ...
         ]
         }
@@ -96,6 +100,7 @@ export const MainScreen: React.FC = () => {
     }
 
     function triggerAiCall() {
+        console.error("AI Call Triggered");
         console.log("AI available to call");
         console.timeLog("AI Execution Time", "AI Call triggered");
         if (aiSafeTopThree.length === 3) {
@@ -125,9 +130,11 @@ export const MainScreen: React.FC = () => {
         console.log("actually send passed");
         if (!imageB64ForAI) return; // No image to process
         console.log("image exists");
-        if (!awaitingAiResponse.current) {
+        if (!awaitingAiResponse.current && !callbackProcessing.current) {
             if (timerStartedRef.current === false) {
                 console.time('AI Execution Time');
+                startPerformanceTime.current = window.performance.now();
+                console.warn("Starting AI Execution Timer:", startPerformanceTime.current);
                 timerStartedRef.current = true;
             }
             triggerAiCall();
@@ -143,19 +150,14 @@ export const MainScreen: React.FC = () => {
             const aiCall = aiCallQueue.pop(); // Remove the first item from the queue
             console.log(`ID: ${aiCall.id}, Rationale: ${aiCall.rationale}`);
             const recheckText = `This is what we have been told based on the provided image. Grid ID: ${aiCall.id}, Rationale: ${aiCall.rationale}; Do you agree with this assessment or do you have a different opinion? Keep your response to maximum 100 words.
-            This would be unsuitable anything resembling a human, clothing, or otherwise could be indangered. Please response in the format: { "id": "${aiCall.id}", "valid_landing_site": <true/false>, "rationale": "<50 words maximum>" }
+            Anything resembling a human, clothing, or similar that could be indangered, would make this landing site unsuitable. Please provide your response in the format: { "id": "${aiCall.id}", "valid_landing_site": <true/false>, "rationale": "<50 words detailing why its a good landing spot>" }
+            Rules & extra information to stick to:
             - The image has been masked so that you only see the grid id cell provided, please ultra analyse it.
             - Bare in mind that anything that looks like an object in the image may be a hazard to the drone itself, and therefore that would make that landing site unsuitable.
-            - If you are unsure, always say false, and provide a reason why you are unsure.
+            - If you are unsure, always say false, and provide the reason why you are unsure.
             - Pay close attention as to whether there are many colours in the cell grid provided, this indicates obstacles, regardless of it being obvious or not.
-            // - If there is a monotone colour, this should indicate a safe landing site, but you must still provide a reason why.`;
-            // const recheckText = `This is what we have been told based on the provided image. Grid ID: ${aiCall.id}, Rationale: ${aiCall.rationale}; Do you agree with this assessment or do you have a different opinion?
-            // Anything resembling a human, clothing, or otherwise that could be indangered - would render this landing spot unsuitable and unsafe. Please respond in the format: { "id": "${aiCall.id}", "valid_landing_site": <true/false>, "reason": "<50 words maximum>" }
-            // - The image has been masked so you can focus only on the grid id cell provided, please ultra analyse it.
-            // - Bare in mind that anything that looks like an object in the image may be a hazard to the drone itself, and therefore that would make that landing site unsuitable.
-            // - If you are unsure, always say false, and provide a reason why you are unsure.
-            // - Pay close attention to the amount of colours in the cell grid provided, a high amount of strong variation could indicate obstacles, regardless of it being obvious or not.
-            // - If there is a monotone colour, this should indicate a safe landing site, but you must still provide a reason why.`;
+            - If there is a monotone colour, this should indicate a safe landing site.
+            - If anything resembling people is visible anywhere, then this landing site is NOT suitable.`;
             setRecheckText(recheckText);
             setActuallySendToAI(true); // Set to true to allow AI calls again
             setKeepParticularCell(aiCall.id)
@@ -163,7 +165,11 @@ export const MainScreen: React.FC = () => {
     }, [aiCallQueue]);
 
     function timeoutCallbackToTriggerAI() {
+        console.error("TRIGGERED TIMEOUT CALLBACK");
+        callbackProcessing.current = true;
         setTimeout(() => {
+            callbackProcessing.current = false;
+            console.error("Timeout callback triggered, checking if AI is busy:", awaitingAiResponse.current);
             console.log("Timeout callback triggered, checking if AI is busy:", awaitingAiResponse.current);
             if (awaitingAiResponse.current === false) {
                 if (aiSafeTopThree.length < 3) {
@@ -180,11 +186,12 @@ export const MainScreen: React.FC = () => {
 
     function downloadRunData() {
         const dataUrl   = originalImageGridOverlay as string;     // "data:image/png;base64,iVBORw0..."
-        const frameId   = 'TEST_SCENARIO';
+        const frameId   = 'AI_SCENARIO_OUTPUT';
         const top3      = aiSafeTopThree;
-        const extras    = { model: 'qwen/qwen2.5-vl-7b', placeholder: "other data" };
+        const extras    = { model: 'qwen/qwen2.5-vl-7b', timeToExecute: `${endPerformanceTime.current - startPerformanceTime.current}ms`, placeholder: "other data" };
+        const top3highlightedImage = imageB64ForAI as string;
 
-        saveScenario(dataUrl, frameId, top3, extras);
+        saveScenario(dataUrl, frameId, top3, extras, top3highlightedImage);
     }
 
     useEffect(() => {
@@ -194,6 +201,7 @@ export const MainScreen: React.FC = () => {
     useEffect(() => {
         if (aiSafeTopThree.length > 0) {
             console.log("AI Safe Top Three currently:", aiSafeTopThree);
+            console.error("AI Safe Top Three Length:", aiSafeTopThree.length);
             if (aiSafeTopThree.length < 3 && cellsToExclude.length < 30) {
                 // Add valid cells to exlude them from future AI calls
                 aiSafeTopThree.forEach(cell => {
@@ -209,10 +217,13 @@ export const MainScreen: React.FC = () => {
                 console.log("AI Safe Top Three is complete or too many cells excluded, stopping AI calls.");
                 console.log("Final AI Safe Top Three:", aiSafeTopThree);
                 if (timerStartedRef.current === true) {
-                    console.error("STOPPING CLOCK");
+                    endPerformanceTime.current = window.performance.now();
+                    console.error("STOPPING CLOCK", console.timeEnd('AI Execution Time'), "--===--",endPerformanceTime.current - startPerformanceTime.current, "ms");
                     console.timeEnd('AI Execution Time');
+                    console.warn("NORMAL END:", endPerformanceTime.current - startPerformanceTime.current, "ms");
                     timerStartedRef.current = false; // Reset timer started flag
                 }
+                setRenderTopThree(true); // Trigger highlighting in green the top three landing sites
                 // Download the scenario data and metadata
                 downloadRunData();
             }
@@ -221,6 +232,8 @@ export const MainScreen: React.FC = () => {
             if (timerStartedRef.current === true) {
                 console.error("STOPPING CLOCK");
                 console.timeEnd('AI Execution Time');
+                endPerformanceTime.current = window.performance.now();
+                console.warn("ELSED END:", endPerformanceTime.current - startPerformanceTime.current, "ms");
                 timerStartedRef.current = false; // Reset timer started flag
             }
         }
@@ -232,6 +245,8 @@ export const MainScreen: React.FC = () => {
                 <ImagePicker
                     soleCellToKeep={keepParticularCell ? keepParticularCell : undefined}
                     cellsToExclude={cellsToExclude}
+                    aiSafeTopThree={aiSafeTopThree}
+                    renderTopThree={renderTopThree}
                 />
                 {/* <div className="image-box">IMAGE BOX</div>
                 <div className="right-panel">RIGHT PANEL</div>

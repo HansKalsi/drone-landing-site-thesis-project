@@ -15,13 +15,13 @@ export interface GridOverlayProps {
   cellsToExclude?: string[]; // cells to exclude from the grid overlay
 }
 
-const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+export const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 const GridOverlay: React.FC<GridOverlayProps> = ({
   imageSrc,
   rows = 10,
   cols = 10,
-  lineColor = "white",   // emerald‑ish green
+  lineColor = "white",
   lineWidth = 2,
   labelColor = "#ffffff",
   outlineColor = "#000000",
@@ -146,8 +146,9 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
         if (label === cellToKeep) continue; // skip the cell to keep
         const x = c * (canvas.width / cols);
         const y = r * (canvas.height / rows);
-        ctx.fillStyle = "rgba(0, 0, 0, 1)"; // semi-transparent black
-        ctx.fillRect(x, y, canvas.width / cols, canvas.height / rows);
+        ctx.fillStyle = "rgba(0, 0, 0, 1)"; // black
+        // Fill space (the +2 is to add padding to ensure there's no gaps)
+        ctx.fillRect(x, y, (canvas.width / cols) + 2, (canvas.height / rows) + 2);
       }
     }
   }
@@ -204,8 +205,8 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
         Grid Overlay Preview
       </h2>
 
-        <h3>Raw Image</h3>
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+      <h3>Raw Image</h3>
+      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", flexDirection: "column" }}>
         {/* raw frame */}
         <div style={{ position: "relative" }}>
           <img
@@ -219,7 +220,15 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
           />
         </div>
 
-        <h3>Image with Grid</h3>
+        <h3 style={{ marginBottom: 'unset' }}>Image with Grid (or modified)</h3>
+        {loaded && (
+          <button
+            onClick={downloadComposite}
+            style={{ padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer", width: 'fit-content', alignSelf: 'center' }}
+          >
+            Download Shown Image
+          </button>
+        )}
         {/* overlay frame */}
         <div style={{ position: "relative" }}>
           <img
@@ -234,15 +243,6 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
           />
         </div>
       </div>
-
-      {loaded && (
-        <button
-          onClick={downloadComposite}
-          style={{ marginTop: "1rem", padding: "0.5rem 1rem", borderRadius: 6, border: "1px solid #ccc", background: "#f5f5f5", cursor: "pointer" }}
-        >
-          Download Composite PNG
-        </button>
-      )}
     </div>
   );
 };

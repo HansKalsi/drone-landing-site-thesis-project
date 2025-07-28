@@ -1,15 +1,17 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import GridOverlay from "./GridOverlay";
+import GridOverlay, { ALPHABET } from "./GridOverlay";
 import { imageB64ForAIContext } from "./MainScreen";
 
 /* ---------- minimal React demo ---------- */
 export default function ImagePicker(props: {
   soleCellToKeep?: string;
   cellsToExclude?: string[];
+  aiSafeTopThree?: any;
+  renderTopThree?: boolean;
 }) {
   const [imgURL, setImgURL] = useState<string | null>(null);
   const overlayRef = useRef<HTMLCanvasElement>(document.createElement("canvas"));
-  const { setImageB64ForAI } = useContext(imageB64ForAIContext);
+  const { setImageB64ForAI, originalImageGridOverlay } = useContext(imageB64ForAIContext);
 
   /* 1. user picks file → object URL */
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -53,6 +55,7 @@ export default function ImagePicker(props: {
       dataURL = off.toDataURL("image/jpeg", qualityReduction);
     }
     if (qualityReduction <= 0.1) {
+      console.warn("Max image reduction size reached:", dataURL.length);
       console.warn("Image could not be reduced to under 1MB, consider using a smaller image.");
       return; // stop code
     }
@@ -73,12 +76,51 @@ export default function ImagePicker(props: {
     }
   }, [props.soleCellToKeep, props.cellsToExclude]);
 
+  useEffect(() => {
+    if (props.renderTopThree) {
+      console.log("Rendering top three AI-safe cells:", props.aiSafeTopThree);
+      // Using originalImageGridOverlay to reset the image to it's default state grid state
+      console.log("OG IMAGE:", originalImageGridOverlay);
+      if (originalImageGridOverlay) {
+        overlayRef.current.toDataURL = () => `data:image/png;base64,${originalImageGridOverlay}`;
+      }
+      // Then, highlight the top three cells in green
+      const canvas = overlayRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // clear previous drawings
+      props.aiSafeTopThree.forEach((cell: any) => {
+        highlightParticularCell(cell.id);
+      });
+    }
+  }, [props.renderTopThree]);
+
+  function highlightParticularCell(cellToKeep: string) {
+    const canvas = overlayRef!.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // clear previous drawings
+    // Fill all cells with a solid colour except a particular grid cell
+    for (let r = 0; r < 10; r++) {
+      for (let c = 0; c < 10; c++) {
+        const label = `${ALPHABET[r]}${c + 1}`;
+        if (label === cellToKeep) continue; // skip the cell to keep
+        const x = c * (canvas.width / 10);
+        const y = r * (canvas.height / 10);
+        ctx.fillStyle = "rgba(52, 170, 70, 0.2)"; // semi-transparent black
+        ctx.fillRect(x, y, canvas.width / 10, canvas.height / 10);
+      }
+    }
+  }
+
   return (
     <main style={{ fontFamily: "sans-serif", padding: 24, maxWidth: 960 }}>
       <h1>Landing-Zone Grid Demo</h1>
 
       {/* file chooser */}
-      <input type="file" accept="image/*" onChange={handleFile} />
+      <input type="file" accept="image/*" onChange={handleFile} style={{ textAlignLast: 'center' }} />
 
       {/* once a file is chosen, show the overlay component */}
       {imgURL && (
