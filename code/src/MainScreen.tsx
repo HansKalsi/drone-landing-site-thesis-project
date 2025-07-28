@@ -51,10 +51,10 @@ export const MainScreen: React.FC = () => {
         ]
         }
         Rules:
+        - Ignore blurriness, do your best with what you have.
         - "safe_top3" must contain maximum 3 items.
-        - If no safe squares exist, return {"unknown": "<50 words maximum>"}, but still provide the 50 word rationale as to why.
-        - If no grid squares are detected, return {"unknown": 'no grid detected'}.
         - Each quadrant borders are defined in white, the label is placed in the center, consider the whole square when making your decision.
+        - Prioritise grid cells with clear, flat, and unobstructed features.
     `;
 
     async function callAiModel(text: string = systemText, callHandleResponse: boolean = true) {
@@ -89,13 +89,19 @@ export const MainScreen: React.FC = () => {
             } else {
                 // Not a valid landing site, so for any future re-runs we want to exclude this cell from the image
                 console.log("Excluding cell from future checks:", parsedResponse.id);
-                setCellsToExclude(prev => [...prev, parsedResponse.id]);
+                if (parsedResponse.id !== undefined) {
+                    setCellsToExclude(prev => [...prev, parsedResponse.id]);
+                }
             }
         }
         if (callHandleResponse) {
             // Re-input the response to the ai to see if it agrees with itself
             console.log(parsedResponse.safe_top3);
-            setAiCallQueue(parsedResponse.safe_top3);
+            if (parsedResponse.safe_top3 !== undefined) {
+                setAiCallQueue(parsedResponse.safe_top3);
+            } else {
+                console.error("No safe_top3 found in response, cannot proceed with AI calls.");
+            }
         }
     }
 
@@ -145,8 +151,10 @@ export const MainScreen: React.FC = () => {
 
     useEffect(() => {
         console.log("AI Call Queue:", aiCallQueue);
-        console.log("AI Call Queue Length", aiCallQueue.length);
-        if (aiCallQueue.length > 0) {
+        if (aiCallQueue) {
+            console.log("AI Call Queue Length", aiCallQueue.length);
+        }
+        if (aiCallQueue && aiCallQueue.length > 0) {
             const aiCall = aiCallQueue.pop(); // Remove the first item from the queue
             console.log(`ID: ${aiCall.id}, Rationale: ${aiCall.rationale}`);
             const recheckText = `This is what we have been told based on the provided image. Grid ID: ${aiCall.id}, Rationale: ${aiCall.rationale}; Do you agree with this assessment or do you have a different opinion? Keep your response to maximum 100 words.
@@ -154,10 +162,10 @@ export const MainScreen: React.FC = () => {
             Rules & extra information to stick to:
             - The image has been masked so that you only see the grid id cell provided, please ultra analyse it.
             - Bare in mind that anything that looks like an object in the image may be a hazard to the drone itself, and therefore that would make that landing site unsuitable.
-            - If you are unsure, always say false, and provide the reason why you are unsure.
             - Pay close attention as to whether there are many colours in the cell grid provided, this indicates obstacles, regardless of it being obvious or not.
             - If there is a monotone colour, this should indicate a safe landing site.
-            - If anything resembling people is visible anywhere, then this landing site is NOT suitable.`;
+            - If anything resembling people is visible anywhere, then this landing site is NOT suitable.
+            - Do your best and analyse the image provided to its fullest extent.`;
             setRecheckText(recheckText);
             setActuallySendToAI(true); // Set to true to allow AI calls again
             setKeepParticularCell(aiCall.id)
