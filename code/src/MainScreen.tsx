@@ -55,6 +55,10 @@ export const MainScreen: React.FC = () => {
         - "safe_top3" must contain maximum 3 items.
         - Each quadrant borders are defined in white, the label is placed in the center, consider the whole square when making your decision.
         - Prioritise grid cells with clear, flat, and unobstructed features.
+        - Prioritise open green areas
+        - Avoid houses and urban infrastructure, as well as any objects that may be hazardous to the drone.
+        - Black is not acceptable areas of the image
+        - Grouping your choices may be ideal if there is an open safe landable area
     `;
 
     async function callAiModel(text: string = systemText, callHandleResponse: boolean = true) {
