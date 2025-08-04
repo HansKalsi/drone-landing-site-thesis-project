@@ -1,10 +1,12 @@
 import './App.css'
-import { MainScreen } from './MainScreen'
+import { DroneTest } from './DroneTest'
+// import { MainScreen } from './MainScreen'
 
 function App() {
   return (
     <>
-      <MainScreen />
+      {/* <MainScreen /> */}
+      <DroneTest />
     </>
   )
 }
