@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useEffect, useRef, useState } from 'react';
 import './MainScreen.css'
 import { askLLM } from './lib/llm';
 import ImagePicker from './ImagePicker';
@@ -62,7 +62,7 @@ export const MainScreen: React.FC = () => {
     `;
 
     async function callAiModel(text: string = systemText, callHandleResponse: boolean = true) {
-        const report = await askLLM(
+        await askLLM(
             text,
             "",
             imageB64ForAI || ""
@@ -201,9 +201,8 @@ export const MainScreen: React.FC = () => {
         const frameId   = 'AI_SCENARIO_OUTPUT';
         const top3      = aiSafeTopThree;
         const extras    = { model: 'qwen/qwen2.5-vl-7b', timeToExecute: `${endPerformanceTime.current - startPerformanceTime.current}ms`, placeholder: "other data" };
-        const top3highlightedImage = imageB64ForAI as string;
 
-        saveScenario(dataUrl, frameId, top3, extras, top3highlightedImage);
+        saveScenario(dataUrl, frameId, top3, extras);
     }
 
     useEffect(() => {

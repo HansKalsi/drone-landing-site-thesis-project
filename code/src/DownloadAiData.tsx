@@ -6,12 +6,11 @@
  * @param {string}        frameId    unique image ID (used in filenames)
  * @param {Array<Object>} top3Cells  [{row, col, score}, …]
  * @param {Object}        extras     optional extra fields for the JSON
- * @param {string}        top3highlightedImage  optional image with highlights for the top 3 cells
  */
-export async function saveScenario(dataUrl: string, frameId: string, top3Cells: Array<Object>, extras: Object = {}, top3highlightedImage?: string) {
+export async function saveScenario(dataUrl: string, frameId: string, top3Cells: Array<Object>, extras: Object = {}) {
   /* ---- data-URL → Blob ---- */
   const imgBlob = await (await fetch("data:image/png;base64," + dataUrl)).blob();   // universal + simplest
-  // const imgBlobHighlights = await (await fetch("data:image/png;base64," + top3highlightedImage)).blob();   // universal + simplest
+  // Prepare download for highlighted image
   const highlightedDataUrl = await highlightTopThreeCellsFromBlob(imgBlob, top3Cells);
   const imgBlobHighlights = await (await fetch(highlightedDataUrl)).blob(); // Convert data URL to Blob
   // (Browsers ≥ Chromium 85 / FF 76 support fetch(dataUrl))
