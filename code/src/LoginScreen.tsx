@@ -1,12 +1,12 @@
 import { useContext, useEffect, useState } from 'react';
-import { DroneTestConsent } from './DroneTest';
+import { DroneTestConsent, DroneTestResults } from './DroneTest';
 
 export const LoginScreen = () => {
     const { setLoggedIn } = useContext(DroneTestConsent);
+    const { participantId, setParticipantId } = useContext(DroneTestResults);
     const [consent, setConsent] = useState(false);
     const [withdrawal, setWithdrawal] = useState(false);
     const [confidentiality, setConfidentiality] = useState(false);
-    const [participantId, setParticipantId] = useState<string>('Unknown');
     
     useEffect(() => {
         console.log("change checked")
@@ -56,7 +56,7 @@ export const LoginScreen = () => {
                 <input id='p_id' hidden defaultValue={participantId}></input>
                 <h3>Participant ID: {participantId}</h3>
                 <p>Note: Please save your Participant ID, as you will need it if you later decide to withdraw from the study.</p>
-                <button onClick={formOnSubmit}>Log In</button>
+                <button disabled={consent && withdrawal && confidentiality ? false : true } onClick={formOnSubmit}>Start</button>
             </form>
         </div>
     );

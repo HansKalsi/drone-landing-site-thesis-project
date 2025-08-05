@@ -5,6 +5,7 @@ import { DroneTest } from './DroneTest'
 function App() {
   return (
     <>
+      {/* Main Screen is where the AI model can be interfaced */}
       {/* <MainScreen /> */}
       <DroneTest />
     </>

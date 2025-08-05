@@ -9,11 +9,26 @@ export const DroneTestConsent = createContext<{
     setLoggedIn: () => {}
 })
 
+export const DroneTestResults = createContext<{
+    participantId: string;
+    setParticipantId: (value: string) => void;
+    answers: object;
+    setAnswers: (value: object) => void;
+}>({
+    participantId: 'Unknown',
+    setParticipantId: () => {},
+    answers: {},
+    setAnswers: () => {}
+});
+
 export const DroneTest = () => {
     const [loggedIn, setLoggedIn] = useState(false);
+    const [participantId, setParticipantId] = useState<string>('Unknown');
+    const [answers, setAnswers] = useState<object>({});
 
     // Record answers to database when the user is finished
     async function handleFinish(pid: string, answers: object) {
+        console.log("Recording answers for participant:", pid, answers);
         await fetch('/api/route', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -23,11 +38,12 @@ export const DroneTest = () => {
 
     function handleClick() {
         setLoggedIn(false);
-        handleFinish('TEST', { answer1: 'value1', answer2: 'value2' });
+        handleFinish(participantId, answers);
     }
 
     return (
         <DroneTestConsent.Provider value={{ loggedIn, setLoggedIn }}>
+            <DroneTestResults.Provider value={{ participantId, setParticipantId, answers, setAnswers }}>
             {!loggedIn ? (
                 <LoginScreen />
             ) : (
@@ -36,6 +52,7 @@ export const DroneTest = () => {
                     <button onClick={handleClick}>Log Out</button>
                 </div>
             )}
+            </DroneTestResults.Provider>
         </DroneTestConsent.Provider>
     );
 }
