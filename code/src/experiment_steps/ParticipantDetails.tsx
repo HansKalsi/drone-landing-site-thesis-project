@@ -43,7 +43,7 @@ export const ParticipantDetails = ({
     return (
         <div>
             <h1>Participant Details</h1>
-            <form>
+            <form style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', margin: 'auto' }}>
                 {/* Total flight hours (as a drone operator and/or airplane pilot) */}
                 <label>
                     Total flight hours (as a drone operator and/or airplane pilot):
