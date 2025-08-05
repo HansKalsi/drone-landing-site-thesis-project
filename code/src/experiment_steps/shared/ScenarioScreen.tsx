@@ -87,6 +87,8 @@ export const ScenarioScreen = ({
         })
         .then(response => {
             console.log("Form data submitted successfully:", response);
+            // Reset the tracker for the next scenario
+            scenarioStartTracker.current = window.performance.now();
             // Increment the experiment step
             setExperimentStep(experimentStep + 1);
         })
