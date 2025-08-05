@@ -1,5 +1,6 @@
 import { createContext, useState } from 'react';
 import { LoginScreen } from './LoginScreen';
+import { ParticipantDetails } from './experiment_steps/ParticipantDetails';
 
 export const DroneTestConsent = createContext<{
     loggedIn: boolean;
@@ -25,6 +26,7 @@ export const DroneTest = () => {
     const [loggedIn, setLoggedIn] = useState(false);
     const [participantId, setParticipantId] = useState<string>('Unknown');
     const [answers, setAnswers] = useState<object>({});
+    const [experimentStep, setExperimentStep] = useState<number>(0);
 
     // Record answers to database when the user is finished
     async function handleFinish(pid: string, answers: object) {
@@ -47,10 +49,12 @@ export const DroneTest = () => {
             {!loggedIn ? (
                 <LoginScreen />
             ) : (
-                <div>
-                    <h1>Welcome to the Drone Test</h1>
-                    <button onClick={handleClick}>Log Out</button>
-                </div>
+                (() => {
+                    switch (experimentStep) {
+                        case 0:
+                            return <ParticipantDetails experimentStep={experimentStep} setExperimentStep={setExperimentStep} />;
+                    }
+                })()
             )}
             </DroneTestResults.Provider>
         </DroneTestConsent.Provider>
