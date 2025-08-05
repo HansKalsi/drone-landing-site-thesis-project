@@ -14,10 +14,10 @@ export const DroneTest = () => {
 
     // Record answers to database when the user is finished
     async function handleFinish(pid: string, answers: object) {
-        await fetch('/api', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pid, data: answers }),
+        await fetch('/api/route', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pid, data: answers }),
         });
     }
 
