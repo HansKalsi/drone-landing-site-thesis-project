@@ -101,7 +101,7 @@ export const ScenarioScreen = ({
                 {/* Easy Tooltip */}
                 <link rel="stylesheet" href="https://unpkg.com/balloon-css/balloon.min.css"></link>
                 <h4 data-balloon-length='fit' data-balloon-pos="down" data-balloon-break style={{ color: 'teal', cursor: 'help' }} aria-label={'1. Please answer every question unless it is marked as optional.\n\n2. If you decide to stop at any point, simply close your browser -\n none of your answers will be saved for the current scenario (past submissions will be).\n\n3. You may need to scroll down on the image to see the whole image.\n\n4. ' + scenarioDescription}>Hover/Tap here to view help info</h4>
-                {aiScenario && <div>{aiLandingSites.map((site: { id: string, rationale: string, valid_landing_site: boolean }) =>  <p><strong style={{ color: 'lightgreen' }}>{site.id}:</strong> <i>{site.rationale}</i></p>)}</div>}
+                {aiScenario ? <div>{aiLandingSites.map((site: { id: string, rationale: string, valid_landing_site: boolean }) =>  <p><strong style={{ color: 'lightgreen' }}>{site.id}:</strong> <i>{site.rationale}</i></p>)}</div> : <p>{scenarioDescription}</p>}
                 <div style={{ maxHeight: '60vh', overflowY: 'auto', marginBottom: '20px' }}>
                     <img style={{ width: '60vw' }} src={`/ai_scenario_results/${imgSrc}/${aiScenario ? 'AI_SCENARIO_OUTPUT--top-three-highlighted.png' : 'AI_SCENARIO_OUTPUT--grid-overlay.png'}`}></img>
                 </div>
