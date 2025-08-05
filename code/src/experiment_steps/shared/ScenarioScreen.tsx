@@ -40,7 +40,7 @@ export const ScenarioScreen = ({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                constructedPId,
+                pid: constructedPId,
                 data: {
                     imgSource: imgSrc.current,
                     idealLandingSites,
