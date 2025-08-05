@@ -36,7 +36,7 @@ export const LoginScreen = () => {
 
     return (
         <div>
-            <h1>Hans' MSc Thesis Experiment (~20mins)</h1>
+            <h1>Hans' MSc Thesis Experiment (~28mins)</h1>
             <h2>Explainable On-Board AI for Safe-Landing Site Selection in Lost-Link Drone Emergencies</h2>
             <h3 style={{ fontStyle: 'italic', color: 'grey' }}>Disclaimer: This experiment is made to be done on a large screen, and may not be mobile friendly</h3>
             <form style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', margin: 'auto' }}>

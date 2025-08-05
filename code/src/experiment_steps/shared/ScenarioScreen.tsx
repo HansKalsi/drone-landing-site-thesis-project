@@ -1,4 +1,4 @@
-import { useContext, useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { DroneTestResults } from "../../DroneTest";
 
 export const ScenarioScreen = ({
@@ -6,16 +6,48 @@ export const ScenarioScreen = ({
     experimentStep,
     setExperimentStep,
     aiScenario,
+    scenarioDescription,
 }: {
     imgSource: string;
     experimentStep: number;
     setExperimentStep: (step: number) => void;
     aiScenario?: boolean;
+    scenarioDescription?: string;
 }) => {
     const { participantId } = useContext(DroneTestResults);
-    const imgSrc = useRef<string>(imgSource);
+    const [imgSrc, setImgSrc] = useState<string>('');
     // Track the start time of the scenario for decision time tracking
     const scenarioStartTracker = useRef<number>(window.performance.now());
+    // Grab JSON data from file
+    const [jsonData, setJsonData] = useState<any>({});
+    const [aiLandingSites, setAiLandingSites] = useState<any[]>([]);
+
+    useEffect(() => {
+        setImgSrc(imgSource);
+    }, [imgSource]);
+
+    useEffect(() => {
+        if (imgSrc) {
+            const jsonUrl = `/ai_scenario_results/${imgSrc}/AI_SCENARIO_OUTPUT--ai-output-and-metadata.json`;
+            
+            fetch(jsonUrl)
+              .then((r) => r.ok ? r.json() : Promise.reject(r))
+              .then(setJsonData);
+        }
+    }, [imgSrc]);
+
+    useEffect(() => {
+        if (!aiScenario) {
+            return;
+        }
+        console.log("jsonData", jsonData);
+        const entries = Object.entries(jsonData);
+        console.log("jsonData", entries);
+        if (entries.length > 0) {
+            console.log(entries);
+            setAiLandingSites(Array.isArray(entries[2][1]) ? entries[2][1] : []);
+        }
+    }, [jsonData]);
 
     function handleClick(e: any) {
         e.preventDefault();
@@ -33,7 +65,7 @@ export const ScenarioScreen = ({
         const aiAccuracy = formData.get('aiAccuracy');
         const aiTrust = formData.get('aiTrust');
 
-        const constructedPId = `${participantId}--${experimentStep}`;
+        const constructedPId = `${participantId}--scenario-${experimentStep}`;
 
         // POST the form data to the server
         fetch('/api/route', {
@@ -42,7 +74,7 @@ export const ScenarioScreen = ({
             body: JSON.stringify({
                 pid: constructedPId,
                 data: {
-                    imgSource: imgSrc.current,
+                    imgSource: imgSrc,
                     idealLandingSites,
                     rationale,
                     perceivedSafety,
@@ -66,10 +98,10 @@ export const ScenarioScreen = ({
                 <h1>Scenario Screen</h1>
                 {/* Easy Tooltip */}
                 <link rel="stylesheet" href="https://unpkg.com/balloon-css/balloon.min.css"></link>
-                <h4 data-balloon-length='fit' data-balloon-pos="up" data-balloon-break style={{ color: 'teal', cursor: 'help' }} aria-label={'1. Please answer every question unless it is marked as optional.\n\n2. Think about the simulator scenario you just completed when answering Section B items.\n\n3. If you decide to stop at any point, simply close your browser -\n none of your answers will be saved for the current iteration (past submissions will be).'}>Hover/Tap here to view help info</h4>
-                <p>.</p>
+                <h4 data-balloon-length='fit' data-balloon-pos="down" data-balloon-break style={{ color: 'teal', cursor: 'help' }} aria-label={'1. Please answer every question unless it is marked as optional.\n\n2. If you decide to stop at any point, simply close your browser -\n none of your answers will be saved for the current scenario (past submissions will be).\n\n3. ' + scenarioDescription}>Hover/Tap here to view help info</h4>
+                {aiScenario && <div>{aiLandingSites.map((site: { id: string, rationale: string, valid_landing_site: boolean }) =>  <p><strong style={{ color: 'lightgreen' }}>{site.id}:</strong> <i>{site.rationale}</i></p>)}</div>}
                 <div>
-                    <img style={{ width: '60vw' }} src={`/ai_scenario_results/${imgSrc.current}/AI_SCENARIO_OUTPUT--top-three-highlighted.png`}></img>
+                    <img style={{ width: '60vw' }} src={`/ai_scenario_results/${imgSrc}/${aiScenario ? 'AI_SCENARIO_OUTPUT--top-three-highlighted.png' : 'AI_SCENARIO_OUTPUT--grid-overlay.png'}`}></img>
                 </div>
             </div>
             <div style={{ width: '25vw' }}>
@@ -128,7 +160,7 @@ export const ScenarioScreen = ({
                             </select>
                         </label>
                         <label>
-                            Trust in the AI System for this scenario (assuming it operated independantly)
+                            Trust in the Onboard AI for this scenario (assuming it operated independantly)
                             <select id="aiTrust" name="aiTrust" defaultValue={3} style={{ width: '100%', padding: '10px', marginBottom: '10px' }}>
                                 <option value="1">1 - No trust at all</option>
                                 <option value="2">2 - Slightly trusting</option>
@@ -139,7 +171,7 @@ export const ScenarioScreen = ({
                         </label>
                     </>
                     )}
-                    <button style={{ marginTop: '5vh' }} onClick={handleClick}>{experimentStep < 17 ? 'Submit & Continue' : 'Complete Experiment'}</button>
+                    <button style={{ marginTop: '5vh' }} onClick={handleClick}>{experimentStep < 23 ? 'Submit & Continue' : 'Complete Experiment'}</button>
                 </form>
             </div>
         </div>
