@@ -1,6 +1,6 @@
 import { createContext, useState } from 'react';
 import { LoginScreen } from './LoginScreen';
-import { ParticipantDetails } from './experiment_steps/ParticipantDetails';
+// import { ParticipantDetails } from './experiment_steps/ParticipantDetails';
 import { ScenarioScreen } from './experiment_steps/shared/ScenarioScreen';
 
 export const DroneTestConsent = createContext<{
@@ -29,20 +29,20 @@ export const DroneTest = () => {
     const [answers, setAnswers] = useState<object>({});
     const [experimentStep, setExperimentStep] = useState<number>(0);
 
-    // Record answers to database when the user is finished
-    async function handleFinish(pid: string, answers: object) {
-        console.log("Recording answers for participant:", pid, answers);
-        await fetch('/api/route', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pid, data: answers }),
-        });
-    }
+    // // Record answers to database when the user is finished
+    // async function handleFinish(pid: string, answers: object) {
+    //     console.log("Recording answers for participant:", pid, answers);
+    //     await fetch('/api/route', {
+    //         method: 'POST',
+    //         headers: { 'Content-Type': 'application/json' },
+    //         body: JSON.stringify({ pid, data: answers }),
+    //     });
+    // }
 
-    function handleClick() {
-        setLoggedIn(false);
-        handleFinish(participantId, answers);
-    }
+    // function handleClick() {
+    //     setLoggedIn(false);
+    //     handleFinish(participantId, answers);
+    // }
 
     return (
         <DroneTestConsent.Provider value={{ loggedIn, setLoggedIn }}>
