@@ -12,6 +12,20 @@ export const DroneTestConsent = createContext<{
 export const DroneTest = () => {
     const [loggedIn, setLoggedIn] = useState(false);
 
+    // Record answers to database when the user is finished
+    async function handleFinish(pid: string, answers: object) {
+        await fetch('/api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pid, data: answers }),
+        });
+    }
+
+    function handleClick() {
+        setLoggedIn(false);
+        handleFinish('TEST', { answer1: 'value1', answer2: 'value2' });
+    }
+
     return (
         <DroneTestConsent.Provider value={{ loggedIn, setLoggedIn }}>
             {!loggedIn ? (
@@ -19,7 +33,7 @@ export const DroneTest = () => {
             ) : (
                 <div>
                     <h1>Welcome to the Drone Test</h1>
-                    <button onClick={() => setLoggedIn(false)}>Log Out</button>
+                    <button onClick={handleClick}>Log Out</button>
                 </div>
             )}
         </DroneTestConsent.Provider>
