@@ -1,0 +1,24 @@
+{
+  "imageId": "AI_SCENARIO_OUTPUT",
+  "savedAt": "2025-07-28T01:08:41.304Z",
+  "landingCandidates": [
+    {
+      "id": "E8",
+      "valid_landing_site": true,
+      "rationale": "The grid appears to be a uniform color with no visible objects or hazards that could endanger the drone."
+    },
+    {
+      "id": "E6",
+      "valid_landing_site": true,
+      "rationale": "The grid appears to be a uniform color with no visible obstacles or hazards."
+    },
+    {
+      "id": "D5",
+      "valid_landing_site": true,
+      "rationale": "The grid appears flat and unobstructed with a monotone color scheme, indicating it's a safe landing spot."
+    }
+  ],
+  "model": "qwen/qwen2.5-vl-7b",
+  "timeToExecute": "63886.09999999404ms",
+  "placeholder": "other data"
+}

@@ -1,0 +1,24 @@
+{
+  "imageId": "AI_SCENARIO_OUTPUT",
+  "savedAt": "2025-07-28T21:08:54.434Z",
+  "landingCandidates": [
+    {
+      "id": "G6",
+      "valid_landing_site": true,
+      "rationale": "The grid shows a large open area with green grass, away from buildings and roads, making it suitable for landing."
+    },
+    {
+      "id": "E4",
+      "valid_landing_site": true,
+      "rationale": "The grid appears clear with a single color, indicating no visible obstacles or hazards."
+    },
+    {
+      "id": "F4",
+      "valid_landing_site": true,
+      "rationale": "The grid cell contains a single, uniform green color with no visible structures or hazards."
+    }
+  ],
+  "model": "qwen/qwen2.5-vl-7b",
+  "timeToExecute": "37584.79999999702ms",
+  "placeholder": "other data"
+}

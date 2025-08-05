@@ -1,0 +1,24 @@
+{
+  "imageId": "AI_SCENARIO_OUTPUT",
+  "savedAt": "2025-07-28T00:36:14.782Z",
+  "landingCandidates": [
+    {
+      "id": "C6",
+      "valid_landing_site": true,
+      "rationale": "The grid appears to be a flat surface with no immediate risks or objects that could endanger the drone."
+    },
+    {
+      "id": "A4",
+      "valid_landing_site": true,
+      "rationale": "The grid appears clear with no visible obstacles or hazards."
+    },
+    {
+      "id": "C3",
+      "valid_landing_site": true,
+      "rationale": "The grid appears to be a uniform green color with no signs of obstacles or people that could pose a danger."
+    }
+  ],
+  "model": "qwen/qwen2.5-vl-7b",
+  "timeToExecute": "42092.70000000298ms",
+  "placeholder": "other data"
+}

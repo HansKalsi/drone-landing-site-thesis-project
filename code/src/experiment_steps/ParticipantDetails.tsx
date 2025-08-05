@@ -7,11 +7,9 @@ export const ParticipantDetails = ({
     experimentStep: number;
     setExperimentStep: (step: number) => void;
 }) => {
-
-
     return (
         <>
-            <ScenarioScreen experimentStep={experimentStep} setExperimentStep={setExperimentStep} />
+            <ScenarioScreen imgSource="very_hard_land" experimentStep={experimentStep} setExperimentStep={setExperimentStep} />
         </>
     )
 }

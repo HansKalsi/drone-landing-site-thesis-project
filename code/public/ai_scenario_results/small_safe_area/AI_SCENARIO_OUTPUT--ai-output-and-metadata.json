@@ -1,0 +1,24 @@
+{
+  "imageId": "AI_SCENARIO_OUTPUT",
+  "savedAt": "2025-07-28T00:33:04.559Z",
+  "landingCandidates": [
+    {
+      "id": "F6",
+      "valid_landing_site": true,
+      "rationale": "The grid appears to be a flat area with minimal obstacles and uniform color, indicating a smooth landing surface."
+    },
+    {
+      "id": "D4",
+      "valid_landing_site": true,
+      "rationale": "The grid appears to be a uniform green color with no visible obstacles or hazards."
+    },
+    {
+      "id": "C3",
+      "valid_landing_site": true,
+      "rationale": "The grid appears to be a solid green color with no other objects or colors present that could indicate hazards."
+    }
+  ],
+  "model": "qwen/qwen2.5-vl-7b",
+  "timeToExecute": "38621.90000000596ms",
+  "placeholder": "other data"
+}

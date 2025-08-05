@@ -1,0 +1,24 @@
+{
+  "imageId": "AI_SCENARIO_OUTPUT",
+  "savedAt": "2025-07-28T21:15:30.677Z",
+  "landingCandidates": [
+    {
+      "id": "D9",
+      "valid_landing_site": true,
+      "rationale": "The grid shows a large open grassy area with no visible obstacles or hazards, making it suitable for landing."
+    },
+    {
+      "id": "E8",
+      "valid_landing_site": true,
+      "rationale": "The grid appears clear with no visible obstacles or colors that suggest hazards."
+    },
+    {
+      "id": "C3",
+      "valid_landing_site": true,
+      "rationale": "The grid appears flat with minimal obstruction, suitable for landing."
+    }
+  ],
+  "model": "qwen/qwen2.5-vl-7b",
+  "timeToExecute": "39761.09999999404ms",
+  "placeholder": "other data"
+}

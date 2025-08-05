@@ -1,6 +1,7 @@
 import { createContext, useState } from 'react';
 import { LoginScreen } from './LoginScreen';
 import { ParticipantDetails } from './experiment_steps/ParticipantDetails';
+import { ScenarioScreen } from './experiment_steps/shared/ScenarioScreen';
 
 export const DroneTestConsent = createContext<{
     loggedIn: boolean;
@@ -52,7 +53,7 @@ export const DroneTest = () => {
                 (() => {
                     switch (experimentStep) {
                         case 0:
-                            return <ParticipantDetails experimentStep={experimentStep} setExperimentStep={setExperimentStep} />;
+                            return <ScenarioScreen imgSource="very_hard_land" experimentStep={experimentStep} setExperimentStep={setExperimentStep} />;
                     }
                 })()
             )}

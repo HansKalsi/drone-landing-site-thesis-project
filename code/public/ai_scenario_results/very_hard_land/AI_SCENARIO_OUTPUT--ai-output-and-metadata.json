@@ -1,0 +1,24 @@
+{
+  "imageId": "AI_SCENARIO_OUTPUT",
+  "savedAt": "2025-07-28T03:14:12.573Z",
+  "landingCandidates": [
+    {
+      "id": "C4",
+      "valid_landing_site": true,
+      "rationale": "The grid appears to be a solid color with no visible obstacles or people, indicating it is a safe landing option."
+    },
+    {
+      "id": "A1",
+      "valid_landing_site": true,
+      "rationale": "The grid appears clear with no visible obstacles or colors that could indicate hazards."
+    },
+    {
+      "id": "C3",
+      "valid_landing_site": true,
+      "rationale": "The grid appears flat with no visible hazards or colors indicating obstacles."
+    }
+  ],
+  "model": "qwen/qwen2.5-vl-7b",
+  "timeToExecute": "29062ms",
+  "placeholder": "other data"
+}

@@ -38,24 +38,25 @@ export const LoginScreen = () => {
         <div>
             <h1>Hans' MSc Thesis Experiment (~20mins)</h1>
             <h2>Explainable On-Board AI for Safe-Landing Site Selection in Lost-Link Drone Emergencies</h2>
+            <h3 style={{ fontStyle: 'italic', color: 'grey' }}>Disclaimer: This experiment is made to be done on a large screen, and may not be mobile friendly</h3>
             <form style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', margin: 'auto' }}>
-                <label>
+                <label style={{ cursor: 'pointer' }}>
                     <input id='consent' type="checkbox" required onChange={() => setConsent(!consent)} />
                     I have read the <a href='/docs/online-participant-information-sheet.pdf' download='DroneParticipationDocument.pdf' target='_blank' rel="noopener noreferrer">Participant Information</a> document and agree to all fields in the <a href='/docs/Research_Consent_Form.pdf' download='DroneConsentForm.pdf' target='_blank' rel="noopener noreferrer">Consent Form</a>.
                 </label>
                 <br />
-                <label>
+                <label style={{ cursor: 'pointer' }}>
                     <input id='withdrawal' type="checkbox" required onChange={() => setWithdrawal(!withdrawal)} />
                     I understand that I can withdraw from the study at any time without penalty (by reaching out and providing my unique participant ID).
                 </label>
                 <br />
-                <label>
+                <label style={{ cursor: 'pointer' }}>
                     <input id='confidentiality' type="checkbox" required onChange={() => setConfidentiality(!confidentiality)} />
-                    I understand that my anonymous data will be used for research purposes only and will be kept confidential.
+                    I understand that my <strong>anonymous data</strong> will be used for research purposes only and will be kept confidential.
                 </label>
                 <input id='p_id' hidden defaultValue={participantId}></input>
                 <h3>Participant ID: {participantId}</h3>
-                <p>Note: Please save your Participant ID, as you will need it if you later decide to withdraw from the study.</p>
+                <p style={{ color: 'teal' }}>Note: Please save your Participant ID, as you will need it if you later decide to withdraw from the study.</p>
                 <button disabled={consent && withdrawal && confidentiality ? false : true } onClick={formOnSubmit}>Start</button>
             </form>
         </div>

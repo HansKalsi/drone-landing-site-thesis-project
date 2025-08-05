@@ -1,0 +1,24 @@
+{
+  "imageId": "AI_SCENARIO_OUTPUT",
+  "savedAt": "2025-07-28T03:21:44.979Z",
+  "landingCandidates": [
+    {
+      "id": "C6",
+      "valid_landing_site": true,
+      "rationale": "The grid appears to be a uniform green color, indicating an open space with minimal risk of collision."
+    },
+    {
+      "id": "A4",
+      "valid_landing_site": true,
+      "rationale": "The grid appears clear with a single color, indicating no obstacles or hazards."
+    },
+    {
+      "id": "C3",
+      "valid_landing_site": true,
+      "rationale": "The grid cell appears clear with a monotone green color, indicating no obstacles or hazards present."
+    }
+  ],
+  "model": "qwen/qwen2.5-vl-7b",
+  "timeToExecute": "28380.29999999702ms",
+  "placeholder": "other data"
+}
