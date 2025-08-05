@@ -69,7 +69,7 @@ export const ScenarioScreen = ({
                 <h4 data-balloon-length='fit' data-balloon-pos="up" data-balloon-break style={{ color: 'teal', cursor: 'help' }} aria-label={'1. Please answer every question unless it is marked as optional.\n\n2. Think about the simulator scenario you just completed when answering Section B items.\n\n3. If you decide to stop at any point, simply close your browser -\n none of your answers will be saved for the current iteration (past submissions will be).'}>Hover/Tap here to view help info</h4>
                 <p>.</p>
                 <div>
-                    <img style={{ width: '60vw' }} src={`../../../public/ai_scenario_results/${imgSrc.current}/AI_SCENARIO_OUTPUT--top-three-highlighted.png`}></img>
+                    <img style={{ width: '60vw' }} src={`/ai_scenario_results/${imgSrc.current}/AI_SCENARIO_OUTPUT--top-three-highlighted.png`}></img>
                 </div>
             </div>
             <div style={{ width: '25vw' }}>
